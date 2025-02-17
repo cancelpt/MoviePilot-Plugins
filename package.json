@@ -1,0 +1,14 @@
+{
+    "TorrentTransferEnhanced": {
+        "name": "转移做种增强",
+        "description": "支持暂停和未完成的种子定时转移做种。",
+        "labels": "做种",
+        "version": "0.1",
+        "icon": "https://raw.githubusercontent.com/cancelpt/MoviePilot-Plugins/refs/heads/main/icons/fruit.png",
+        "author": "jxxghp,cancelpt",
+        "level": 2,
+        "history": {
+            "v0.1": "初始版本"
+        }
+    }
+}
