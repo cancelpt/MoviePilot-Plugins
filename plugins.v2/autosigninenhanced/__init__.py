@@ -750,6 +750,12 @@ class AutoSignInEnhanced(_PluginBase):
             site_day_key = f"{site_name}_{date_str}"
 
             # 存储或更新记录（如有多条取最新）
+            if site_day_key in site_day_records:
+                existing = site_day_records[site_day_key]
+                if existing.get("message") and not data.get("message"):
+                    if data.get("site_id") and not existing.get("site_id"):
+                        existing["site_id"] = data.get("site_id")
+                    continue
             site_day_records[site_day_key] = data
 
         # 整理去重后的数据
@@ -767,6 +773,12 @@ class AutoSignInEnhanced(_PluginBase):
             site_day_key = f"{site_name}_{date_str}"
 
             # 存储或更新记录
+            if site_day_key in site_day_records:
+                existing = site_day_records[site_day_key]
+                if existing.get("message") and not data.get("message"):
+                    if data.get("site_id") and not existing.get("site_id"):
+                        existing["site_id"] = data.get("site_id")
+                    continue
             site_day_records[site_day_key] = data
 
         # 整理去重后的数据
@@ -786,7 +798,7 @@ class AutoSignInEnhanced(_PluginBase):
                 logger.debug(f"排序失败: {str(e)}")
 
             # 获取最新的状态作为站点概要
-            latest_status = records[0].get("status", "未知状态")
+            latest_status = records[0].get("message") or records[0].get("status", "未知状态")
 
             # 确定状态颜色和图标
             status_color = "teal-lighten-3"
@@ -821,12 +833,11 @@ class AutoSignInEnhanced(_PluginBase):
             except Exception as e:
                 logger.debug(f"排序失败: {str(e)}")
 
-            # 获取最新的状态作为站点概要
-            latest_status = records[0].get("status", "未知状态")
 
             # 确定状态颜色和图标
             status_color = "teal-lighten-3"
             status_icon = "mdi-emoticon-happy-outline"
+            latest_status = records[0].get("status", "未知状态")
 
             if "失败" in latest_status or "错误" in latest_status:
                 status_color = "deep-orange-lighten-3"
