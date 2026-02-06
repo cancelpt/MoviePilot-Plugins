@@ -19,7 +19,6 @@
         "icon": "signin.png",
         "author": "thsrite,cancelpt",
         "level": 2,
-        "release": true,
         "history": {
             "v2.8.1-Enhanced-v0.2": "增强了签到、登录历史记录显示",
             "v2.8.1-Enhanced-v0.1": "从AutoSignIn v2.8.1 源码修改而来"
