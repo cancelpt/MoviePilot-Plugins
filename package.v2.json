@@ -15,12 +15,13 @@
         "name": "站点自动签到增强",
         "description": "自动模拟登录、签到站点。",
         "labels": "站点",
-        "version": "2.8.1-Enhanced-v0.1",
+        "version": "2.8.1-Enhanced-v0.2",
         "icon": "signin.png",
         "author": "thsrite,cancelpt",
         "level": 2,
         "release": true,
         "history": {
+            "v2.8.1-Enhanced-v0.2": "增强了签到、登录历史记录显示",
             "v2.8.1-Enhanced-v0.1": "从AutoSignIn v2.8.1 源码修改而来"
         }
     }

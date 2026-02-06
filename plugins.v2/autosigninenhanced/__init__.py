@@ -95,7 +95,7 @@ class AutoSignInEnhanced(_PluginBase):
     # 插件图标
     plugin_icon = "signin.png"
     # 插件版本
-    plugin_version = "2.8.1-Enhanced-v0.1"
+    plugin_version = "2.8.1-Enhanced-v0.2"
     # 插件作者
     plugin_author = "thsrite,cancelpt"
     # 作者主页
@@ -155,7 +155,7 @@ class AutoSignInEnhanced(_PluginBase):
         # 加载模块
         if self._enabled or self._onlyonce:
 
-            self._site_schema = ModuleHelper.load('app.plugins.autosignin.sites',
+            self._site_schema = ModuleHelper.load('app.plugins.autosigninenhanced.sites',
                                                   filter_func=lambda _, obj: hasattr(obj, 'match'))
 
             # 立即运行一次
@@ -246,8 +246,8 @@ class AutoSignInEnhanced(_PluginBase):
             try:
                 if str(self._cron).strip().count(" ") == 4:
                     return [{
-                        "id": "AutoSignIn",
-                        "name": "站点自动签到服务",
+                        "id": "AutoSignInEnhanced",
+                        "name": "站点自动签到增强服务",
                         "trigger": CronTrigger.from_crontab(self._cron),
                         "func": self.sign_in,
                         "kwargs": {}
@@ -267,8 +267,8 @@ class AutoSignInEnhanced(_PluginBase):
                             self._end_time = int(times[1])
                         if self._start_time and self._end_time:
                             return [{
-                                "id": "AutoSignIn",
-                                "name": "站点自动签到服务",
+                                "id": "AutoSignInEnhanced",
+                                "name": "站点自动签到增强服务",
                                 "trigger": "interval",
                                 "func": self.sign_in,
                                 "kwargs": {
@@ -276,12 +276,12 @@ class AutoSignInEnhanced(_PluginBase):
                                 }
                             }]
                         else:
-                            logger.error("站点自动签到服务启动失败，周期格式错误")
+                            logger.error("站点自动签到增强服务启动失败，周期格式错误")
                     else:
                         # 默认0-24 按照周期运行
                         return [{
-                            "id": "AutoSignIn",
-                            "name": "站点自动签到服务",
+                            "id": "AutoSignInEnhanced",
+                            "name": "站点自动签到增强服务",
                             "trigger": "interval",
                             "func": self.sign_in,
                             "kwargs": {
@@ -300,8 +300,8 @@ class AutoSignInEnhanced(_PluginBase):
             ret_jobs = []
             for trigger in triggers:
                 ret_jobs.append({
-                    "id": f"AutoSignIn|{trigger.hour}:{trigger.minute}",
-                    "name": "站点自动签到服务",
+                    "id": f"AutoSignInEnhanced|{trigger.hour}:{trigger.minute}",
+                    "name": "站点自动签到增强服务",
                     "trigger": "cron",
                     "func": self.sign_in,
                     "kwargs": {
@@ -1258,7 +1258,7 @@ class AutoSignInEnhanced(_PluginBase):
                                     'variant': 'flat',
                                     'prepend-icon': record_icon
                                 },
-                                'text': status_text
+                                'text': f"{record.get('message', '')}" if record.get('message', '') else status_text
                             }
                         ]
                     }
@@ -1360,15 +1360,9 @@ class AutoSignInEnhanced(_PluginBase):
         """
         签到逻辑
         """
-        yesterday = today - timedelta(days=1)
-        yesterday_str = yesterday.strftime('%Y-%m-%d')
-        # 删除昨天历史
-        self.del_data(key=type_str + "-" + yesterday_str)
-        self.del_data(key=f"{yesterday.month}月{yesterday.day}日")
-
         # 查看今天有没有签到|登录历史
-        today = today.strftime('%Y-%m-%d')
-        today_history = self.get_data(key=type_str + "-" + today)
+        today_str = today.strftime('%Y-%m-%d')
+        today_history = self.get_data(key=type_str + "-" + today_str)
 
         # 查询所有站点
         all_sites = [site for site in SitesHelper().get_indexers() if not site.get("public")] + self.__custom_sites()
@@ -1420,19 +1414,35 @@ class AutoSignInEnhanced(_PluginBase):
             # 获取今天的日期
             key = f"{datetime.now().month}月{datetime.now().day}日"
             today_data = self.get_data(key)
+            new_records = []
+            for s in status:
+                msg = s[1]
+                st = msg
+                if "Cookie" in msg:
+                    st = "Cookie已失效"
+                elif "失败" in msg or "错误" in msg:
+                    st = "失败"
+                elif "已签到" in msg:
+                    st = "已签到"
+                elif "模拟登录成功" in msg:
+                    st = "登录成功"
+                elif "签到" in msg and ("得" in msg or "第" in msg):
+                    st = "签到成功"
+                elif "成功" in msg:
+                    st = "成功"
+
+                new_records.append({
+                    "site": s[0],
+                    "status": st,
+                    "message": msg
+                })
+
             if today_data:
                 if not isinstance(today_data, list):
                     today_data = [today_data]
-                for s in status:
-                    today_data.append({
-                        "site": s[0],
-                        "status": s[1]
-                    })
+                today_data.extend(new_records)
             else:
-                today_data = [{
-                    "site": s[0],
-                    "status": s[1]
-                } for s in status]
+                today_data = new_records
             # 保存数据
             self.save_data(key, today_data)
 
@@ -1496,7 +1506,7 @@ class AutoSignInEnhanced(_PluginBase):
             logger.debug(f"下次{type_str}重试站点 {retry_sites}")
 
             # 存入历史
-            self.save_data(key=type_str + "-" + today,
+            self.save_data(key=type_str + "-" + today_str,
                            value={
                                "do": self._sign_sites if type_str == "签到" else self._login_sites,
                                "retry": retry_sites
